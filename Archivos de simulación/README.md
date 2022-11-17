@@ -1,1 +1,1 @@
-# Carpeta destinada a almacenar los archivos del proteus
+# Carpeta destinada a almacenar los archivos del Proteus 8 Professional
