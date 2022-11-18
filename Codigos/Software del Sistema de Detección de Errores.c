@@ -1,7 +1,7 @@
 ////////VARIABLES DE FUSIBLE Y ALIMENTACION////////
 float Vi;
 float fus;
-
+32
 char estado = 'A';
 float temp;
 ////////PINE DE LEDS////////
