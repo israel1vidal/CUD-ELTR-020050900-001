@@ -5,6 +5,10 @@ float fus;
 char estado = 'A';
 float temp;
 int LecB = 0;
+int Error = 0;
+float Inv;
+float MAX1;
+float MAX2;
 
 ////////PINE DE LEDS////////
 #define ErrFA   3  //Led de error en Alimentacios
@@ -15,13 +19,30 @@ int LecB = 0;
 #define ErrGrl  8  //Led de error en General
 #define BB_Stop  10 //Boton para detener el sondo de alarma (buzzer)
 
+////////LECTURA DE ERRORES////////
+
+#define PinVi A0
+#define PinFus A1
+#define PinPo1 A2
+#define PinPo2 A3
+#define PinInv A4
+#define PinCi1 12
+#define PinCi2 13
+
 ////////VARIABLES DE POTENCIA////////
 long temp2;
 float P1;
 float P2;
 
+////////VARIABLES DE POTENCIA////////
+int pwm_valor1;
+int pwm_valor2;
+
+
 void setup() {
   Serial.begin(9600);
+  pinMode(PinCi1, INPUT);
+  pinMode(PinCi2, INPUT);
   pinMode(ErrFA, OUTPUT); //LED marca error
   pinMode(ErrFB, OUTPUT); //LED marca error
   pinMode(ErrP, OUTPUT); //LED marca error 
@@ -52,7 +73,8 @@ void loop() {
       if ((fus < 984) || (fus > 1023)) {
         estado = 'C';
       }
-      if () {
+      if (pwm_valor1 < 3 && pwm_valor2 < 3 || pwm_valor1 > 3 && pwm_valor2 > 3) {
+        
         estado = 'D';
       }
       if (Error == 1) {
@@ -88,7 +110,11 @@ void loop() {
       digitalWrite(ErrGrl, HIGH);
       if (millis() > temp + 500) {
         temp = millis();
-        tone(9, 1800);
+        if (LecB == 0) {
+          tone(9, 1800);
+        } else {
+          noTone(9);
+        }
       }
       if ((fus > 984) && (fus < 1023)) {
         estado = 'A';
@@ -96,7 +122,24 @@ void loop() {
       break;
     /////////////////////////////////////////////////////////////////////////
     case 'D':
-      //No llegamos a integrar un Sistema PWM por falta de tiempo,no disculpamos
+      lectura();
+      noTone(9);
+      digitalWrite(ErrCI, HIGH);
+      digitalWrite(ErrI, HIGH);
+      if (millis() > temp + 500) {
+        temp = millis();
+        if (LecB == 0) {
+          tone(9, 1800);
+        } else {
+          noTone(9);
+        }
+      }
+      if (pwm_valor1 < 3 && pwm_valor2 < 3 || pwm_valor1 > 3 && pwm_valor2 > 3) {
+        estado = 'D';
+      }else{
+        estado = 'A';
+      }
+
       break;
     /////////////////////////////////////////////////////////////////////////
     case 'E':
@@ -130,7 +173,7 @@ void loop() {
           noTone(9);
         }
       }
-      if (Error == 0) {
+      if (Inv > 1000 && Inv < 1024) {
         estado = 'A';
       }
       break;
@@ -140,26 +183,29 @@ void loop() {
 
 
 void lectura() {
+  float P1_Ant = P1;
+  float P2_Ant = P2;
   if (digitalRead(BB_Stop == HIGH))LecB = 1;
-
-  Vi = analogRead(A0);
-  fus = analogRead(A1);
-  P1 = analogRead(A2);
-  P2 = analogRead(A3);
-  Inv = analogRead(A4);
+  pwm_valor1 = pulseIn(PinCi1, HIGH);
+  pwm_valor2 = pulseIn(PinCi2, HIGH);
+  Vi = analogRead(PinVi);
+  fus = analogRead(PinFus);
+  P1 = analogRead(PinPo1);
+  P2 = analogRead(PinPo2);
+  Inv = analogRead(PinInv);
   Serial.print(P1);
   Serial.print(" ");
   Serial.println(P2);
 
-  if (P1 >= 750 && P1 = < 1023 ) {
-    if (P2 >= 750 && P2 = < 1023) {
+  if (P1 >= 750 && P1 <= 1023 ) {
+    if (P2 >= 750 && P2 <= 1023) {
       Error = 1;
     } else {
       Error = 0;
     }
   }
-  if (P1 >= 0 && P1 = < 200) {
-    if (P2 >= 0 && P2 = < 200) {
+  if (P1 >= 0 && P1 <= 200) {
+    if (P2 >= 0 && P2 <= 200) {
       Error = 1;
     } else {
       Error = 0;
@@ -176,6 +222,6 @@ void lectura() {
       Error = 0;
     }
   }
-  float P1_Ant = P1;
-  float P2_Ant = P2;
+P1_Ant = P1;
+P2_Ant = P2;
 }
