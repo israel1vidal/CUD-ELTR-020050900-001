@@ -1,2 +1,2 @@
-# Diagrama en bloques del Software de erroes
+# Diagrama en bloques del Software detector de erroes
  
