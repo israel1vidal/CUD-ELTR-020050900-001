@@ -4,6 +4,8 @@ float fus;
 
 char estado = 'A';
 float temp;
+int LecB = 0;
+
 ////////PINE DE LEDS////////
 #define ErrFA   3  //Led de error en Alimentacios
 #define ErrFB   4  //Led de error en Fusible
@@ -11,6 +13,8 @@ float temp;
 #define ErrI    6  //Led de error en Inversor
 #define ErrCI   7  //Led de error en Circuito integrado
 #define ErrGrl  8  //Led de error en General
+#define BB_Stop  10 //Boton para detener el sondo de alarma (buzzer)
+
 ////////VARIABLES DE POTENCIA////////
 long temp2;
 float P1;
@@ -20,10 +24,11 @@ void setup() {
   Serial.begin(9600);
   pinMode(ErrFA, OUTPUT); //LED marca error
   pinMode(ErrFB, OUTPUT); //LED marca error
-  pinMode(ErrP, OUTPUT); //LED marca error
-  pinMode(ErrT, OUTPUT); //LED marca error
+  pinMode(ErrP, OUTPUT); //LED marca error 
+  pinMode(ErrI, OUTPUT); //LED marca error
   pinMode(ErrCI, OUTPUT); //LED marca error
   pinMode(ErrGrl, OUTPUT); //LED marca error
+  pinMode(BB_Stop, INPUT); //Boton de Stop Buzzer
   pinMode(9, OUTPUT); // buzzer
 }
 
@@ -35,24 +40,25 @@ void loop() {
       digitalWrite(ErrFA, LOW);
       digitalWrite(ErrFB, LOW);
       digitalWrite(ErrP, LOW);
-      digitalWrite(ErrT, LOW);
+      digitalWrite(ErrI, LOW);
       digitalWrite(ErrCI, LOW);
       digitalWrite(ErrGrl, LOW);
       temp = millis();
       lectura();
+      LecB = 0;
       if ((Vi < 984) || (Vi > 1023)) {
         estado = 'B';
       }
       if ((fus < 984) || (fus > 1023)) {
         estado = 'C';
       }
-      if(){
-        estado ='D';
+      if () {
+        estado = 'D';
       }
       if (Error == 1) {
         estado = 'E';
       }
-      if(Inv < 1000 || Inv > 1023){
+      if (Inv < 1000 || Inv > 1023) {
         estado = 'F';
       }
       break;
@@ -64,7 +70,11 @@ void loop() {
       digitalWrite(ErrGrl, HIGH);
       if (millis() > temp + 500) {
         temp = millis();
-        tone(9, 1800);
+        if (LecB == 0) {
+          tone(9, 1800);
+        } else {
+          noTone(9);
+        }
       }
       if ((Vi > 984) && (Vi < 1023)) {
         estado = 'A';
@@ -86,35 +96,43 @@ void loop() {
       break;
     /////////////////////////////////////////////////////////////////////////
     case 'D':
-            //No llegamos a integrar un Sistema PWM por falta de tiempo,no disculpamos
+      //No llegamos a integrar un Sistema PWM por falta de tiempo,no disculpamos
       break;
     /////////////////////////////////////////////////////////////////////////
     case 'E':
-            lectura();
-            noTone(9);
-            digitalWrite(ErrGrl,HIGH);
-            digitalWrite(ErrP,HIGH);
-            if (millis() > temp + 500) {
-              temp = millis();
-              tone(9, 1800);
-            }
-            if(Error == 0){
-              estado = 'A';
-            }
+      lectura();
+      noTone(9);
+      digitalWrite(ErrGrl, HIGH);
+      digitalWrite(ErrP, HIGH);
+      if (millis() > temp + 500) {
+        temp = millis();
+        if (LecB == 0) {
+          tone(9, 1800);
+        } else {
+          noTone(9);
+        }
+      }
+      if (Error == 0) {
+        estado = 'A';
+      }
       break;
     /////////////////////////////////////////////////////////////////////////
     case 'F':
-            lectura();
-            noTone(9);
-            digitalWrite(ErrGrl,HIGH);
-            digitalWrite(ErrI,HIGH);
-            if (millis() > temp + 500) {
-              temp = millis();
-              tone(9, 1800);
-            }
-            if(Error == 0){
-              estado = 'A';
-            }
+      lectura();
+      noTone(9);
+      digitalWrite(ErrGrl, HIGH);
+      digitalWrite(ErrI, HIGH);
+      if (millis() > temp + 500) {
+        temp = millis();
+        if (LecB == 0) {
+          tone(9, 1800);
+        } else {
+          noTone(9);
+        }
+      }
+      if (Error == 0) {
+        estado = 'A';
+      }
       break;
       /////////////////////////////////////////////////////////////////////////
   }
@@ -122,6 +140,8 @@ void loop() {
 
 
 void lectura() {
+  if (digitalRead(BB_Stop == HIGH))LecB = 1;
+
   Vi = analogRead(A0);
   fus = analogRead(A1);
   P1 = analogRead(A2);
